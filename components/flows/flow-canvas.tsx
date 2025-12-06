@@ -1,18 +1,19 @@
 // src/components/flow/FlowCanvas.tsx
 "use client";
 
-import { useCallback, useState } from "react";
-import { 
-  ReactFlow, 
-  Background, 
-  Controls, 
-  MiniMap, 
-  useNodesState, 
+import { useCallback } from "react";
+import {
+  ReactFlow,
+  Background,
+  Controls,
+  MiniMap,
+  useNodesState,
   useEdgesState,
   addEdge,
   Connection,
   Edge,
-  Node
+  Node,
+  BackgroundVariant
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";  // Core styles (grid, handles, etc.)
 
@@ -50,7 +51,7 @@ export default function FlowCanvas() {
         nodeTypes={{}}  // We'll add custom node types later
         edgeTypes={{}}  // Custom edges for control flow later
       >
-        <Background variant="dots" gap={12} size={1} />
+        <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
         <Controls />
         <MiniMap />
       </ReactFlow>

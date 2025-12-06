@@ -1,13 +1,10 @@
-import { PyodideInterface } from "pyodide";
+import { PyodideInterface, loadPyodide } from "pyodide";
 
 // src/lib/pyodide/loader.ts
 let pyodidePromise: Promise<PyodideInterface> | null = null;
 
 export async function loadPyodideOnce(): Promise<PyodideInterface> {
   if (pyodidePromise) return pyodidePromise;
-
-  // Dynamic import so it only loads when needed (tree-shaken on first run)
-  const { loadPyodide } = await import("pyodide");
 
   pyodidePromise = loadPyodide({
     indexURL: "https://cdn.jsdelivr.net/pyodide/v0.28.1/full/",
