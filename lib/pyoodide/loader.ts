@@ -1,35 +1,48 @@
-import { PyodideInterface, loadPyodide } from "pyodide";
-
 // src/lib/pyodide/loader.ts
-let pyodidePromise: Promise<PyodideInterface> | null = null;
+let pyodidePromise: Promise<any> | null = null;
 
-export async function loadPyodideOnce(): Promise<PyodideInterface> {
+export async function loadPyodideOnce(): Promise<any> {
   if (pyodidePromise) return pyodidePromise;
 
-  pyodidePromise = loadPyodide({
-    indexURL: "https://cdn.jsdelivr.net/pyodide/v0.28.1/full/",
-    // You can increase these if you plan to allow big libraries later
-    stdin: () => {
-      // We don't support interactive input yet
-      return null;
-    },
-  });
+  pyodidePromise = (async () => {
+    // Load pyodide from CDN to avoid bundling issues
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/pyodide/v0.24.0/full/pyodide.js";
+    script.async = true;
 
-  const pyodide = await pyodidePromise;
+    return new Promise((resolve, reject) => {
+      script.onload = async () => {
+        try {
+          // @ts-ignore
+          const pyodide = await window.loadPyodide({
+            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.0/full/",
+          });
 
-  // Redirect Python stdout/stderr to JS
-  pyodide.setStdout({
-    batched: (text: string) => {
-      const event = new CustomEvent("python-stdout", { detail: text });
-      window.dispatchEvent(event);
-    },
-  });
-  pyodide.setStderr({
-    batched: (text: string) => {
-      const event = new CustomEvent("python-stderr", { detail: text });
-      window.dispatchEvent(event);
-    },
-  });
+          // Redirect Python stdout/stderr to JS
+          pyodide.setStdout({
+            batched: (text: string) => {
+              const event = new CustomEvent("python-stdout", { detail: text });
+              window.dispatchEvent(event);
+            },
+          });
+          pyodide.setStderr({
+            batched: (text: string) => {
+              const event = new CustomEvent("python-stderr", { detail: text });
+              window.dispatchEvent(event);
+            },
+          });
 
-  return pyodide;
+          resolve(pyodide);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      script.onerror = () => {
+        reject(new Error("Failed to load Pyodide from CDN"));
+      };
+      document.head.appendChild(script);
+    });
+  })();
+
+  return pyodidePromise;
 }
